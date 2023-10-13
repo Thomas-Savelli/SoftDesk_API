@@ -7,6 +7,6 @@ class IsContributor(permissions.BasePermission):
         return Contributor.objects.filter(project=obj, contributor=request.user).exists()
 
 
-class IsProjectCreator(permissions.BasePermission):
+class IsCreator(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.creator == request.user

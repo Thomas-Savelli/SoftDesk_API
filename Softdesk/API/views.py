@@ -1,4 +1,6 @@
-from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.generics import (RetrieveUpdateAPIView,
+                                     CreateAPIView)
+
 from django.contrib.auth.hashers import make_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, status, generics
@@ -12,7 +14,7 @@ from .serializers import (ProjectListSerializer,
                           ProjectSerializer,
                           IssueSerializer)
 
-from .permissions import IsContributor, IsProjectCreator
+from .permissions import IsContributor, IsCreator
 
 
 @api_view(['POST'])
@@ -66,22 +68,27 @@ class DetailProjectView(generics.RetrieveAPIView):
         return Response(serializer.data)
 
 
-class CreateProjectView(generics.CreateAPIView):
+class CreateProjectView(CreateAPIView):
+    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        project = serializer.save(creator=self.request.user)
+        Contributor.objects.create(project=project, contributor=self.request.user)
 
 
 class ProjectUpdateAPIView(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsProjectCreator]
+    permission_classes = [IsAuthenticated, IsCreator]
     http_method_names = ['put', 'patch']
 
 
 class ProjectDeleteAPIView(generics.DestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsProjectCreator]
+    permission_classes = [IsAuthenticated, IsCreator]
 
     def destroy(self, request, *args, **kwargs):
         project = self.get_object()
@@ -110,3 +117,25 @@ class CreateIssueView(CreateAPIView):
         else:
             return Response({"message": "You are not allowed to create an issue in this project."},
                             status=status.HTTP_403_FORBIDDEN)
+
+
+class UpdateIssueView(RetrieveUpdateAPIView):
+    serializer_class = IssueSerializer
+    queryset = Issue.objects.all()
+    permission_classes = [IsAuthenticated, IsCreator]
+    http_method_names = ['put', 'patch']
+
+
+class DeleteIssueView(generics.DestroyAPIView):
+    queryset = Issue.objects.all()
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated, IsCreator]
+
+    def destroy(self, request, *args, **kwargs):
+        issue = self.get_object()
+        if issue.creator == request.user:
+            issue.delete()
+            return Response({"detail": "Issue successfully deleted"},
+                            status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "You do not have permission to delete this project !"},
+                        status=status.HTTP_403_FORBIDDEN)

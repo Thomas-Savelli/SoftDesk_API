@@ -27,7 +27,9 @@ from API.views import (ListProjectsView,
                        CreateProjectView,
                        ProjectUpdateAPIView,
                        ProjectDeleteAPIView,
-                       CreateIssueView)
+                       CreateIssueView,
+                       UpdateIssueView,
+                       DeleteIssueView)
 
 router = routers.SimpleRouter()
 router.register('project', ListProjectsView, basename='project')
@@ -46,4 +48,6 @@ urlpatterns = [
     path('api/project/update/<int:pk>/', ProjectUpdateAPIView.as_view(), name='project-update'),
     path('api/project/delete/<int:pk>/', ProjectDeleteAPIView.as_view(), name='project-delete'),
     path('api/project/<int:project_id>/issue/create/', CreateIssueView.as_view(), name='issue-create'),
+    path('api/issue/update/<int:pk>/', UpdateIssueView.as_view(), name='upadate-issue'),
+    path('api/issue/delete/<int:pk>/', DeleteIssueView.as_view(), name='delete-issue'),
 ]

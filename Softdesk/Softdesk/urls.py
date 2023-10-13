@@ -23,7 +23,11 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from API.views import (ListProjectsView,
                        user_registration_view,
                        join_project,
-                       DetailProjectsView)
+                       DetailProjectView,
+                       CreateProjectView,
+                       ProjectUpdateAPIView,
+                       ProjectDeleteAPIView,
+                       CreateIssueView)
 
 router = routers.SimpleRouter()
 router.register('project', ListProjectsView, basename='project')
@@ -35,7 +39,11 @@ urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
-    path('api/project/join/<int:project_id>/', join_project, name='join_project'),
-    path('api/project/<int:id>', DetailProjectsView.as_view(),
+    path('api/project/create/', CreateProjectView.as_view(), name='create-project'),
+    path('api/project/join/<int:id>/', join_project, name='join-project'),
+    path('api/project/detail/<int:id>/', DetailProjectView.as_view(),
          name='project_detail'),
+    path('api/project/update/<int:pk>/', ProjectUpdateAPIView.as_view(), name='project-update'),
+    path('api/project/delete/<int:pk>/', ProjectDeleteAPIView.as_view(), name='project-delete'),
+    path('api/project/<int:project_id>/issue/create/', CreateIssueView.as_view(), name='issue-create'),
 ]

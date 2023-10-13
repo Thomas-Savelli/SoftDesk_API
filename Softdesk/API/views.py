@@ -1,14 +1,18 @@
+from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView, RetrieveAPIView
 from django.contrib.auth.hashers import make_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Project, Contributor
+from .models import Project, Contributor, Issue
 from .serializers import (ProjectListSerializer,
                           ProjectDetailSerializer,
-                          UserRegistrationSerializer)
-from .permissions import IsContributor
+                          UserRegistrationSerializer,
+                          ProjectSerializer,
+                          IssueSerializer)
+
+from .permissions import IsContributor, IsProjectCreator
 
 
 @api_view(['POST'])
@@ -50,10 +54,59 @@ def join_project(request, id):
                     status=status.HTTP_201_CREATED)
 
 
-class DetailProjectsView(generics.RetrieveAPIView):
+@permission_classes([IsAuthenticated, IsContributor])
+class DetailProjectView(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
     serializer_class = ProjectDetailSerializer
-    permission_classes = [IsContributor]
+    lookup_field = 'id'
 
-    def get_queryset(self):
-        project_id = self.kwargs['id']
-        return Project.objects.filter(id=project_id).prefetch_related('issues', 'contributors')
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class CreateProjectView(generics.CreateAPIView):
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class ProjectUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated, IsProjectCreator]
+    http_method_names = ['put', 'patch']
+
+
+class ProjectDeleteAPIView(generics.DestroyAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated, IsProjectCreator]
+
+    def destroy(self, request, *args, **kwargs):
+        project = self.get_object()
+        if project.creator == request.user:
+            project.delete()
+            return Response({"detail": "Project successfully deleted"},
+                            status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "You do not have permission to delete this project !"},
+                        status=status.HTTP_403_FORBIDDEN)
+
+
+class CreateIssueView(CreateAPIView):
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated, IsContributor]
+
+    def perform_create(self, serializer):
+        # Récupérez le projet auquel l'issue doit être associée
+        project_id = self.kwargs.get('project_id')
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return Response({"message": "The project does not exist"},
+                            status=status.HTTP_404_NOT_FOUND)
+        if project.contributors.filter(id=self.request.user.id).exists():
+            serializer.save(project=project, creator=self.request.user)
+        else:
+            return Response({"message": "You are not allowed to create an issue in this project."},
+                            status=status.HTTP_403_FORBIDDEN)

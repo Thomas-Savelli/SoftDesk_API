@@ -3,7 +3,8 @@ from rest_framework.serializers import ModelSerializer
 from .models import (User,
                      Contributor,
                      Project,
-                     Issue)
+                     Issue,
+                     Comment)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -96,3 +97,21 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['name', 'description', 'type']
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    creator = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'creator', 'texte']
+
+
+class IssueDetailSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Issue
+        fields = ['id', 'name', 'description',
+                  'creator', 'assigne_a', 'statut',
+                  'priority', 'balise', 'comments']

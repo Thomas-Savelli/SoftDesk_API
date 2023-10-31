@@ -23,13 +23,18 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from API.views import (ListProjectsView,
                        user_registration_view,
                        join_project,
-                       DetailProjectView,
                        CreateProjectView,
-                       ProjectUpdateAPIView,
-                       ProjectDeleteAPIView,
+                       DetailProjectView,
                        CreateIssueView,
                        UpdateIssueView,
-                       DeleteIssueView)
+                       DeleteIssueView,
+                       CreateCommentView,
+                       UpdateCommentView,
+                       DeleteCommentView)
+
+# ProjectUpdateAPIView,
+# ProjectDeleteAPIView,
+
 
 router = routers.SimpleRouter()
 router.register('project', ListProjectsView, basename='project')
@@ -41,13 +46,17 @@ urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
-    path('api/project/create/', CreateProjectView.as_view(), name='create-project'),
+    path('api/project/create/', CreateProjectView.as_view(), name='project-create'),
     path('api/project/join/<int:id>/', join_project, name='join-project'),
     path('api/project/detail/<int:id>/', DetailProjectView.as_view(),
          name='project_detail'),
-    path('api/project/update/<int:pk>/', ProjectUpdateAPIView.as_view(), name='project-update'),
-    path('api/project/delete/<int:pk>/', ProjectDeleteAPIView.as_view(), name='project-delete'),
+    # path('api/project/update/<int:pk>/', ProjectUpdateAPIView.as_view(), name='project-update'),
+    # path('api/project/delete/<int:pk>/', ProjectDeleteAPIView.as_view(), name='project-delete'),
     path('api/project/<int:project_id>/issue/create/', CreateIssueView.as_view(), name='issue-create'),
     path('api/issue/update/<int:pk>/', UpdateIssueView.as_view(), name='upadate-issue'),
     path('api/issue/delete/<int:pk>/', DeleteIssueView.as_view(), name='delete-issue'),
+    path('api/project/<int:project_id>/issue/<int:issue_id>/comment/create/', CreateCommentView.as_view(),
+         name='create-comment'),
+    path('api/comment/update/<int:pk>/', UpdateCommentView.as_view(), name='update-comment'),
+    path('api/comment/delete/<int:pk>/', DeleteCommentView.as_view(), name='delete-comment'),
 ]

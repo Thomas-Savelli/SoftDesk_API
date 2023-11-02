@@ -24,7 +24,10 @@ from API.views import (ListProjectsView,
                        user_registration_view,
                        join_project,
                        ProjectView,
-                       IssueView)
+                       CreateIssueView,
+                       IssueView,
+                       CreateCommentView,
+                       CommentView)
 
 
 urlpatterns = [
@@ -35,14 +38,9 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/project/', ListProjectsView.as_view({'post': 'create', 'get': 'list'}), name='project-list'),
     path('api/project/<int:id>/join/', join_project, name='join-project'),
-    path('api/project/<int:id>/', ProjectView.as_view(), name='project_detail'),
-    path('api/project/<int:project_id>/create_issue/', IssueView.as_view(), name='create-issue'),
+    path('api/project/<int:id>/', ProjectView.as_view(), name='retrieve-update-delete-project'),
+    path('api/project/<int:project_id>/create-issue/', CreateIssueView.as_view(), name='create-issue'),
     path('api/issue/<int:issue_id>/', IssueView.as_view(), name='retrieve-update-delete-issue'),
-    # path('api/project/<int:project_id>/issue/create/', CreateIssueView.as_view(), name='issue-create'),
-    # path('api/issue/update/<int:pk>/', UpdateIssueView.as_view(), name='upadate-issue'),
-    # path('api/issue/delete/<int:pk>/', DeleteIssueView.as_view(), name='delete-issue'),
-    # path('api/project/<int:project_id>/issue/<int:issue_id>/comment/create/', CreateCommentView.as_view(),
-    #      name='create-comment'),
-    # path('api/comment/update/<int:pk>/', UpdateCommentView.as_view(), name='update-comment'),
-    # path('api/comment/delete/<int:pk>/', DeleteCommentView.as_view(), name='delete-comment'),
+    path('api/issue/<int:issue_id>/create-comment/', CreateCommentView.as_view(), name='comment-create'),
+    path('api/comment/<int:pk>/', CommentView.as_view(), name='retrieve-update-delete-comment'),
 ]

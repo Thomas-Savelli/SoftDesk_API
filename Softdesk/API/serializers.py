@@ -24,7 +24,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class ContributorSerializer(serializers.ModelSerializer):
-    contributor = UserSerializer()
+    contributor = UserSerializer(source='contributor.contributor', read_only=True)
 
     class Meta:
         model = Contributor
@@ -44,15 +44,41 @@ class ProjectListSerializer(ModelSerializer):
         return instance.creator.username
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    creator = serializers.StringRelatedField()
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'creator', 'texte']
+
+    
+
+
 class IssueSerializer(serializers.ModelSerializer):
-    creator = serializers.PrimaryKeyRelatedField(read_only=True,
-                                                 default=serializers.CurrentUserDefault())
+    creator = serializers.StringRelatedField(source='creator.username', read_only=True)
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Issue
         fields = ['id', 'name', 'description',
                   'creator', 'assigne_a', 'statut',
-                  'priority', 'balise']
+                  'priority', 'balise', 'comments']
+
+    def get_creator(self, instance):
+        return instance.creator.username
+
+    def get_comments(self, instance):
+        comments = Comment.objects.filter(issue=instance)
+        serialized_comments = []
+
+        for comment in comments:
+            serialized_comment = {
+                'id': comment.id,
+                'creator': comment.creator.contributor.username,
+                'texte': comment.texte,
+            }
+            serialized_comments.append(serialized_comment)
+        return serialized_comments
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
@@ -97,21 +123,3 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['name', 'description', 'type']
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    creator = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = Comment
-        fields = ['id', 'creator', 'texte']
-
-
-class IssueDetailSerializer(serializers.ModelSerializer):
-    comments = CommentSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Issue
-        fields = ['id', 'name', 'description',
-                  'creator', 'assigne_a', 'statut',
-                  'priority', 'balise', 'comments']

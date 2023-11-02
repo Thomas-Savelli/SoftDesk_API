@@ -1,5 +1,5 @@
 from rest_framework.generics import (RetrieveUpdateAPIView,
-                                     CreateAPIView, DestroyAPIView,
+                                     CreateAPIView,
                                      RetrieveUpdateDestroyAPIView)
 
 from django.contrib.auth.hashers import make_password
@@ -70,7 +70,7 @@ def join_project(request, id):
                     status=status.HTTP_201_CREATED)
 
 
-class ProjectView(CreateAPIView, RetrieveUpdateDestroyAPIView):
+class ProjectView(RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectDetailSerializer
     lookup_field = 'id'
@@ -99,7 +99,30 @@ class ProjectView(CreateAPIView, RetrieveUpdateDestroyAPIView):
         return Response(serializer.data)
 
 
-class IssueView(CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView):
+class CreateIssueView(CreateAPIView):
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated, IsContributor]
+
+    def create(self, request, *args, **kwargs):
+        project_id = self.kwargs.get('project_id')  # get ID Project
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return Response({"message": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # control if user is a contributor of Project
+        if not Contributor.objects.filter(project=project, contributor=request.user).exists():
+            return Response({"message": "You are not a contributor to this project"},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(creator=request.user, project=project)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    
+class IssueView(RetrieveUpdateDestroyAPIView):
     serializer_class = IssueSerializer
     queryset = Issue.objects.all()
     permission_classes = [IsAuthenticated, IsContributor]
@@ -117,19 +140,6 @@ class IssueView(CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-
-    def perform_create(self, serializer):
-        project_id = self.kwargs.get('project_id')
-        try:
-            project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            return Response({"message": "The project does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        
-        if project.contributors.filter(id=self.request.user.id).exists():
-            issue = serializer.save(project=project, creator=self.request.user)
-            return Response({"message": "Issue created successfully", "issue_id": issue.id}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"message": "You are not allowed to create an issue in this project."}, status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request, *args, **kwargs):
         issue = self.get_object()
@@ -149,64 +159,31 @@ class IssueView(CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView):
                             status=status.HTTP_403_FORBIDDEN)
 
 
-# class UpdateIssueView(RetrieveUpdateAPIView):
-#     serializer_class = IssueSerializer
-#     queryset = Issue.objects.all()
-#     permission_classes = [IsAuthenticated, IsCreator]
-#     http_method_names = ['put', 'patch']
-
-
-# class DeleteIssueView(generics.DestroyAPIView):
-#     queryset = Issue.objects.all()
-#     serializer_class = IssueSerializer
-#     permission_classes = [IsAuthenticated, IsCreator]
-
-#     def destroy(self, request, *args, **kwargs):
-#         issue = self.get_object()
-#         if issue.creator == request.user:
-#             issue.delete()
-#             return Response({"detail": "Issue successfully deleted"},
-#                             status=status.HTTP_204_NO_CONTENT)
-#         return Response({"detail": "You do not have permission to delete this issue !"},
-#                         status=status.HTTP_403_FORBIDDEN)
-
-
-class CreateCommentView(generics.CreateAPIView):
+class CreateCommentView(CreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsContributor]
 
     def perform_create(self, serializer):
         issue_id = self.kwargs.get('issue_id')
+        user = self.request.user
+
         try:
             issue = Issue.objects.get(id=issue_id)
         except Issue.DoesNotExist:
-            return Response({"message": "The issue does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        contributor = Contributor.objects.get(user=self.request.user)
-        if issue.project.contributors.filter(id=self.request.user.id).exists():
-            serializer.save(issue=issue, creator=self.request.user)
+        # Vérifiez si l'utilisateur est un contributeur du projet associé à l'issue
+        project = issue.project
+        contributor = Contributor.objects.filter(project=project, contributor=user).first()
+
+        if contributor:
+            serializer.save(creator=contributor, issue=issue, link_issue=issue)
         else:
-            return Response({"message": "You are not allowed to create an issue in this project."},
+            return Response({"message": "You are not a contributor to this project and cannot create a comment"},
                             status=status.HTTP_403_FORBIDDEN)
 
 
-class UpdateCommentView(RetrieveUpdateAPIView):
-    serializer_class = CommentSerializer
-    queryset = Comment.objects.all()
-    permission_classes = [IsAuthenticated, IsCreator]
-    http_method_names = ['put', 'patch']
-
-
-class DeleteCommentView(generics.DestroyAPIView):
+class CommentView(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsCreator]
-
-    def destroy(self, request, *args, **kwargs):
-        comment = self.get_object()
-        if comment.creator == request.user:
-            comment.delete()
-            return Response({"detail": "Comment successfully deleted"},
-                            status=status.HTTP_204_NO_CONTENT)
-        return Response({"detail": "You do not have permission to delete this comment !"},
-                        status=status.HTTP_403_FORBIDDEN)

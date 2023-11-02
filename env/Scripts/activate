@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\thoma\Desktop\OpenClassrooms\Parcours DA PYTHON\Projet 10\SoftDesk API\env"
+VIRTUAL_ENV="C:\Users\thoma\Desktop\OpenClassrooms\Parcours DA PYTHON\Projet 10\SoftDesk_API\env"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

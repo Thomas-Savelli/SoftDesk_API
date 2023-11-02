@@ -23,16 +23,9 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from API.views import (ListProjectsView,
                        user_registration_view,
                        join_project,
-                       CreateProjectView,
-                       DetailProjectView,
+                       ProjectView,
                        IssueView)
 
-# ProjectUpdateAPIView,
-# ProjectDeleteAPIView,
-
-
-router = routers.SimpleRouter()
-router.register('project', ListProjectsView, basename='project')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,10 +33,9 @@ urlpatterns = [
     path('api/signup/', user_registration_view, name='api_signup'),
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/', include(router.urls)),
-    path('api/project/create/', CreateProjectView.as_view(), name='project-create'),
-    path('api/project/join/<int:id>/', join_project, name='join-project'),
-    path('api/project/detail/<int:id>/', DetailProjectView.as_view(), name='project_detail'),
+    path('api/project/', ListProjectsView.as_view({'post': 'create', 'get': 'list'}), name='project-list'),
+    path('api/project/<int:id>/join/', join_project, name='join-project'),
+    path('api/project/<int:id>/', ProjectView.as_view(), name='project_detail'),
     path('api/project/<int:project_id>/create_issue/', IssueView.as_view(), name='create-issue'),
     path('api/issue/<int:issue_id>/', IssueView.as_view(), name='retrieve-update-delete-issue'),
     # path('api/project/<int:project_id>/issue/create/', CreateIssueView.as_view(), name='issue-create'),

@@ -3,8 +3,9 @@ from rest_framework.generics import (RetrieveUpdateAPIView,
                                      RetrieveUpdateDestroyAPIView)
 
 from django.contrib.auth.hashers import make_password
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework import viewsets, status, generics
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework import status, generics
+from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
@@ -33,8 +34,19 @@ def user_registration_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CustomListProjectsViewMixin:
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def create(self, request):
+        serializer = ProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            project = serializer.save(creator=request.user)
+            Contributor.objects.create(project=project, contributor=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
 @permission_classes([IsAuthenticated])
-class ListProjectsView(viewsets.ReadOnlyModelViewSet):
+class ListProjectsView(CustomListProjectsViewMixin, ReadOnlyModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectListSerializer
 
@@ -58,17 +70,7 @@ def join_project(request, id):
                     status=status.HTTP_201_CREATED)
 
 
-class CreateProjectView(CreateAPIView):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        project = serializer.save(creator=self.request.user)
-        Contributor.objects.create(project=project, contributor=self.request.user)
-
-
-class DetailProjectView(RetrieveUpdateDestroyAPIView):
+class ProjectView(CreateAPIView, RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectDetailSerializer
     lookup_field = 'id'
@@ -121,13 +123,13 @@ class IssueView(CreateAPIView, RetrieveUpdateAPIView, DestroyAPIView):
         try:
             project = Project.objects.get(id=project_id)
         except Project.DoesNotExist:
-            return Response({"message": "The project does not exist"},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "The project does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
         if project.contributors.filter(id=self.request.user.id).exists():
-            serializer.save(project=project, creator=self.request.user)
+            issue = serializer.save(project=project, creator=self.request.user)
+            return Response({"message": "Issue created successfully", "issue_id": issue.id}, status=status.HTTP_201_CREATED)
         else:
-            return Response({"message": "You are not allowed to create an issue in this project."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "You are not allowed to create an issue in this project."}, status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request, *args, **kwargs):
         issue = self.get_object()

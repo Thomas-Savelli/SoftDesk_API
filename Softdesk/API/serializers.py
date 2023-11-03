@@ -10,7 +10,16 @@ from .models import (User,
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['username', 'email', 'password',
+                  'date_of_birth', 'can_be_contacted',
+                  'can_data_be_shared']
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'date_of_birth', 'can_be_contacted',
+                  'can_data_be_shared']
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

@@ -20,7 +20,9 @@ from rest_framework import routers
 from rest_framework_simplejwt.views import (TokenObtainPairView,
                                             TokenRefreshView)
 
-from API.views import (ListProjectsView,
+from API.views import (UserProfileView,
+                       UserDetailView,
+                       ListProjectsView,
                        user_registration_view,
                        join_project,
                        ProjectView,
@@ -36,6 +38,8 @@ urlpatterns = [
     path('api/signup/', user_registration_view, name='api_signup'),
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/user/profile/', UserProfileView.as_view(), name='user-profile'),
+    path('api/user/profile/<int:id>/', UserDetailView.as_view(), name='user-detail'),
     path('api/project/', ListProjectsView.as_view({'post': 'create', 'get': 'list'}), name='project-list'),
     path('api/project/<int:id>/join/', join_project, name='join-project'),
     path('api/project/<int:id>/', ProjectView.as_view(), name='retrieve-update-delete-project'),

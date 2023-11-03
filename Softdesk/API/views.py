@@ -9,8 +9,10 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Project, Contributor, Issue, Comment
-from .serializers import (ProjectListSerializer,
+from .models import User, Project, Contributor, Issue, Comment
+from .serializers import (UserSerializer,
+                          UserDetailSerializer,
+                          ProjectListSerializer,
                           ProjectDetailSerializer,
                           UserRegistrationSerializer,
                           ProjectSerializer,
@@ -43,6 +45,40 @@ def user_registration_view(request):
             return Response({'message': 'User registered successfully'},
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileView(RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Get User Profile
+        user = self.request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        # Update User Profile
+        user = self.request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        # Delete User profile
+        user = self.request.user
+        user.delete()
+        return Response({'message': 'Compte utilisateur supprimé avec succès'},
+                        status=status.HTTP_204_NO_CONTENT)
+
+
+class UserDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserDetailSerializer
+    lookup_field = 'id'
 
 
 class CustomListProjectsViewMixin:

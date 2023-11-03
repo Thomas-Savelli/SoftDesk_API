@@ -24,14 +24,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.get_full_name() or self.username
 
-    # Vérifie utilisateur a + de 15 ans
-    def clean(self):
-        today = date.today()
-        age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month,
-                                                                                  self.date_of_birth.day))
-        if age < 15:
-            raise ValidationError("L'utilisateur doit avoir plus de 15 ans.")
-
 
 class Project(models.Model):
     TYPE_CHOICES = (

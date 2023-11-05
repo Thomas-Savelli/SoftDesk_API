@@ -219,7 +219,7 @@ class CreateCommentView(CreateAPIView):
         except Issue.DoesNotExist:
             return Response({"message": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Vérifiez si l'utilisateur est un contributeur du projet associé à l'issue
+        # check if user is contributor to project issue
         project = issue.project
         contributor = Contributor.objects.filter(project=project, contributor=user).first()
 

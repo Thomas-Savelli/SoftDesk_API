@@ -10,7 +10,7 @@ from .models import (User,
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password',
+        fields = ['username', 'email',
                   'date_of_birth', 'can_be_contacted',
                   'can_data_be_shared']
 
@@ -59,8 +59,6 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'creator', 'texte']
-
-    
 
 
 class IssueSerializer(serializers.ModelSerializer):

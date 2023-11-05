@@ -1,0 +1,956 @@
+{
+	"info": {
+		"_postman_id": "f34e8c67-a343-4911-9f33-1fd3ac653ee6",
+		"name": "SoftDesk API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27963811"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "signup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"username\",\r\n    \"password\": \"password\",\r\n    \"email\": \"votre_email@example.com\",\r\n    \"date_of_birth\": \"YYYY-MM-DD\",\r\n    \"can_be_contacted\": true,\r\n    \"can_be_data_shared\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/signup/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"signup",
+								""
+							]
+						},
+						"description": "La requête `POST http://127.0.0.1:8000/api/signup/` permet à un utilisateur de s'inscrire et de créer un compte dans l'application SoftDesk API. Cette API permet à de nouveaux utilisateurs de fournir des informations personnelles pour créer un profil.\n\nRéponse attendue : _\"User registered successfully\"_\n\n**Avertissement :**\n\nSi l'une des données manque ou ne satisfait pas aux critères (par exemple, l'âge minimal de 15 ans pour la date de naissance), l'API renverra un message d'erreur approprié et un code de statut HTTP 400 (Bad Request)."
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"username\",\r\n    \"password\": \"password\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/login/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"login",
+								""
+							]
+						},
+						"description": "La requête `POST http://127.0.0.1:8000/api/login/` permet à un utilisateur de se connecter et d'obtenir sa paire de token. Un token d'authentification et un token de rafraichissement. Tout deux retourné au format JSON.\n\nA partir de ce moment, l'utilisateur devra renseigner son access token dans le header afin d'avoir accés aux informations de l'API\n\n**Exemple dans le Headers** :\n\n**Authentification : Bearer {{access_token}}**"
+					},
+					"response": []
+				},
+				{
+					"name": "token refresh",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refresh\": \"votre token refresh\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/token/refresh/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"token",
+								"refresh",
+								""
+							]
+						},
+						"description": "La requête `POST http://127.0.0.1:8000/api/token/refresh` permet à un utilisateur d'actualiser son token access lorsque celui ci ne sera plus effectif. Le nouveau token access sera retourné au format JSON."
+					},
+					"response": []
+				}
+			],
+			"description": "Ce dossier contient des requêtes pour gérer l'authentification des utilisateurs. Elles permettent de créer un compte utilisateur, de se connecter, et d'obtenir deuix jetons d'authentifications, un token access pour accéder aux ressources protégées de l'API et un token refresh pour actualiser le premier.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "user profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user/profile/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user",
+								"profile",
+								""
+							]
+						},
+						"description": "Cette requête permet de voir les informations de profile de l'utilisateur connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "user detail",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user/profile/<int:id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user",
+								"profile",
+								"<int:id>",
+								""
+							]
+						},
+						"description": "Cette requête permet de voir les informations de profile des autres utilisateurs. Pour ce faire, veuillez renseigner l'ID de l'utilisateur voulu."
+					},
+					"response": []
+				},
+				{
+					"name": "profile partiel update",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"champ voulu\": \"votre changement\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user/profile/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user",
+								"profile",
+								""
+							]
+						},
+						"description": "Cette requête permet de modifier partiellement une information du profile de l'utilisateur connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "profile full update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"nouvel username\",\r\n    \"email\": \"nouvel email\",\r\n    \"date_of_birth\": \"YYYY-MM-DD\",\r\n    \"can_be_contacted\": true,\r\n    \"ban_data_be_shared\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user/profile/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user",
+								"profile",
+								""
+							]
+						},
+						"description": "Cette requête permet de modifier l'intégralité du profile de l'utilisateur connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "profile delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/user/profile/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"user",
+								"profile",
+								""
+							]
+						},
+						"description": "Cette requête permet de supprimer le profil d'un utilisateur et par conséquent son compte utilisateur, ainsi que toutes les informations qui lui sont attribuées."
+					},
+					"response": []
+				}
+			],
+			"description": "Ce dossier est dédié à la gestion des profils d'utilisateurs. Vous pouvez y trouver des requêtes pour rechercher un utilisateur par ID, ainsi que pour mettre à jour ou supprimer votre propre compte."
+		},
+		{
+			"name": "Project",
+			"item": [
+				{
+					"name": "list project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								""
+							]
+						},
+						"description": "Cette requête permet d'avoir accés à la liste de tout les projets crées."
+					},
+					"response": []
+				},
+				{
+					"name": "join project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/<int:id>/join/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								"<int:id>",
+								"join",
+								""
+							]
+						},
+						"description": "Cette requête permet de devenir contributeur d'un projet en particulier et par conséquent de pouvoir contribuer à son dévelloppement. Pour celui il vous suffit de spécifier l'ID du projet dans l'url de la requête."
+					},
+					"response": []
+				},
+				{
+					"name": "create project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"nom du project\",\r\n    \"description\": \"description du projet\",\r\n    \"type\": \"exemple-type\"\r\n}\r\n\r\n    // exemple-type =  'back-end', 'front-end', 'iOS', 'Android', 'web', 'mobile', 'data', 'ai', 'iot'",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								""
+							]
+						},
+						"description": "Cette requête vous permet de créer un nouveau projet. Veuillez faire attention aux informations que vous fournirez. En effet le champ type nécéssite une valeur spécifique à la liste énumérée ci dessous dans la section _**Body raw (json).**_\n\nDe plus sachez qu'en tant que créateur d'un projet, vous serez automatiquement assigné à ce projet comme contributeur et n'aurait par conséquent pas le besoin d'éffectuer une requête à fin de le devenir."
+					},
+					"response": []
+				},
+				{
+					"name": "detail project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/<int:id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								"<int:id>",
+								""
+							]
+						},
+						"description": "Cette requête permet de rechercher et afficher les détail du projet selectionné à travers son ID.\n\nComme par exemple sa liste de contributeurs et la liste des issues qu'il posséde.\n\n**ATTENTION: Pour pouvoir accéder aux informations détaillées d'un projet, l'utilisateur connecté doit en être un contributeur !**"
+					},
+					"response": []
+				},
+				{
+					"name": "project update partiel",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"champ voulu\": \"nouvelle information\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/<int:id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								"<int:id>",
+								""
+							]
+						},
+						"description": "Cette requête permet de faire une modification partielle d'un projet.\n\n_**ATTENTION: Seul le créateur du projet a le droit de modifier le projet !**_"
+					},
+					"response": []
+				},
+				{
+					"name": "project full update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"nouveau nom\",\r\n    \"description\": \"nouvelle description\",\r\n    \"type\": \"nouveau type\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/<int:id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								"<int:id>",
+								""
+							]
+						},
+						"description": "Cette requête permet de faire une modification totale d'un projet.\n\n_**ATTENTION: Seul le créateur du projet a le droit de modifier le projet !**_"
+					},
+					"response": []
+				},
+				{
+					"name": "delete project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/<int:id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								"<int:id>",
+								""
+							]
+						},
+						"description": "Cette requête permet de supprimer un projet.\n\n_**ATTENTION: Seul le créateur du projet a le droit de supprimer le projet !**_"
+					},
+					"response": []
+				}
+			],
+			"description": "Le dossier \"Projet\" contient des requêtes pour créer de nouveaux projets, récupérer la liste des projets existants, rejoindre un projet en tant que contributeur, obtenir des détails sur un projet spécifique, mettre à jour un projet et le supprimer."
+		},
+		{
+			"name": "Issue",
+			"item": [
+				{
+					"name": "create-issue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"votre nom d'issue\",\r\n    \"description\": \"votre description\",\r\n    \"assigne_a\": \"user or default=null\",\r\n    \"statut\": \"choix_statut\",\r\n    \"priority\": \"choix_priority\",\r\n    \"balise\": \"choix_balise\"\r\n}\r\n\r\n// choix_status = [To_Do, In Progress, Finished]\r\n// choix_priority = [LOW, MEDIUM, HIGH]\r\n// choix_balise = [BUG, FEATURE, TASK]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/project/<int:project_id>/create-issue/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"project",
+								"<int:project_id>",
+								"create-issue",
+								""
+							]
+						},
+						"description": "Cette requête permet de créer une issue sur un projet spécifique. Le projet sélectionné est débord spécifier par l'url( `api/project/`/ ) puis l'action est définit par ( `create-issue/` )"
+					},
+					"response": []
+				},
+				{
+					"name": "detail issue",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/issue/<int:issue_id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"issue",
+								"<int:issue_id>",
+								""
+							]
+						},
+						"description": "Cette requête permet d'avoir tous les détails concernant une issue spécifique de par son ID. Comme par exemple la liste des commentaires qui lui sont attribués."
+					},
+					"response": []
+				},
+				{
+					"name": "issue partiel update",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"votre champ\": \"nouvelle entrée\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/issue/<int:issue_id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"issue",
+								"<int:issue_id>",
+								""
+							]
+						},
+						"description": "Cette requête permet d'effectuer une modification partielle sur les données d'une issue.\n\n**ATTENTION: Pour pouvoir effectuer une modification sur une issue, il faut que l'utilisateur connecté en soit le créateur.**"
+					},
+					"response": []
+				},
+				{
+					"name": "issue full update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"votre nouveau nom\",\r\n    \"description\": \"votre nouvelle description\",\r\n    \"assigne_a\": \"user or default=null\",\r\n    \"statut\": \"nouveau choix_statut\",\r\n    \"priority\": \"nouveau choix_priority\",\r\n    \"balise\": \"nouveau choix_balise\"\r\n}\r\n\r\n// choix_status = [To_Do, In Progress, Finished]\r\n// choix_priority = [LOW, MEDIUM, HIGH]\r\n// choix_balise = [BUG, FEATURE, TASK]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/issue/<int:issue_id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"issue",
+								"<int:issue_id>",
+								""
+							]
+						},
+						"description": "Cette requête permet d'effectuer une modification totale des données d'une issue.\n\n**ATTENTION: Pour pouvoir effectuer une modification sur une issue, il faut que l'utilisateur connecté en soit le créateur.**"
+					},
+					"response": []
+				},
+				{
+					"name": "delete issue",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/issue/<int:issue_id>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"issue",
+								"<int:issue_id>",
+								""
+							]
+						},
+						"description": "Cette requête permet de supprimer intégralement une issue.\n\n**ATTENTION: Pour pouvoir effectuer une suppression totale sur une issue, il faut que l'utilisateur connecté en soit le créateur.**"
+					},
+					"response": []
+				}
+			],
+			"description": "Le dossier \"Issue\" contient des requêtes pour créer des issues, récupérer la liste des issues existantes par projets, obtenir des détails sur une issue spécifique, mettre à jour et supprimer une issue.\n\n**ATTENTION: Il faut être contributeur du projet pour pouvoir intérargir avec ses éléments !**"
+		},
+		{
+			"name": "Comment",
+			"item": [
+				{
+					"name": "create comment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"texte\": \"votre commentaire\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/issue/<int:issue_id>/create-comment/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"issue",
+								"<int:issue_id>",
+								"create-comment",
+								""
+							]
+						},
+						"description": "Cette requête permet de créer un commentaire de par l'id de l'issue au sein de l'url."
+					},
+					"response": []
+				},
+				{
+					"name": "update comment",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"texte\": \"votre modification de commentaire\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/comment/<int:pk>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"comment",
+								"<int:pk>",
+								""
+							]
+						},
+						"description": "Cette requête permet de modifier le champ texte du Comment.\n\n**ATTENTION: La modification du Comment ne pourra être effectuer que si l'utilisateur connecté en est le créateur !**"
+					},
+					"response": []
+				},
+				{
+					"name": "delete comment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/comment/<int:pk>/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"comment",
+								"<int:pk>",
+								""
+							]
+						},
+						"description": "Cette requête permet de supprimer un commentaire.\n\n**ATTENTION: La suppresion du Comment ne pourra être effectuer que si l'utilisateur connecté en est le créateur !**"
+					},
+					"response": []
+				}
+			],
+			"description": "Le dossier \"Comment\" contient des requêtes pour créer de nouveaux commentaires liés aux issues, ainsi que les mettre à jour et les supprimer.\n\n**ATTENTION: Tout comme pour les issues, il est obligatoire d'être contributeur du projet dans lequel toutes ces données sont créer et gérer !**"
+		}
+	],
+	"variable": [
+		{
+			"key": "access_token",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjk4OTU0MTcwLCJpYXQiOjE2OTg5NTM4NzAsImp0aSI6IjdlMDA2Y2U3ZmM1YzRlMDQ5MGU5YzdkOGM5Nzk5OTk4IiwidXNlcl9pZCI6OH0.EcMneFzFhSFPWkCWZBH13-iSkA6Fcc7xnWu5zzwo3aU"
+		}
+	]
+}

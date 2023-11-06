@@ -58,7 +58,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'creator', 'texte']
+        fields = ['id', 'creator','date_created', 'texte']
 
 
 class IssueSerializer(serializers.ModelSerializer):
@@ -68,7 +68,7 @@ class IssueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issue
         fields = ['id', 'name', 'description',
-                  'creator', 'assigne_a', 'statut',
+                  'creator','date_created', 'assigne_a', 'statut',
                   'priority', 'balise', 'comments']
 
     def get_creator(self, instance):
@@ -82,6 +82,7 @@ class IssueSerializer(serializers.ModelSerializer):
             serialized_comment = {
                 'id': comment.id,
                 'creator': comment.creator.contributor.username,
+                'date_created': comment.date_created,
                 'texte': comment.texte,
             }
             serialized_comments.append(serialized_comment)

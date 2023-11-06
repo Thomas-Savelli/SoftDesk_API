@@ -29,13 +29,14 @@ def user_registration_view(request):
         if serializer.is_valid():
             # Récupérer la date de naissance depuis les données du formulaire
             birthdate = serializer.validated_data.get('birthdate')
-            
+
             if 'date_of_birth' in serializer.validated_data:
                 birthdate = serializer.validated_data['date_of_birth']
                 today = date.today()
                 age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
                 if age < 15:
-                    return Response({'message': 'You must be at least 15 years old to register.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'message': 'You must be at least 15 years old to register.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({'message': 'The date of birth is required.'}, status=status.HTTP_400_BAD_REQUEST)
             # Hacher le mot de passe avant de l'enregistrer
@@ -90,7 +91,7 @@ class CustomListProjectsViewMixin:
             Contributor.objects.create(project=project, contributor=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 @permission_classes([IsAuthenticated])
 class ListProjectsView(CustomListProjectsViewMixin, ReadOnlyModelViewSet):
@@ -136,6 +137,8 @@ class ProjectView(RetrieveUpdateDestroyAPIView):
         project = self.get_object()
         if project.creator == self.request.user:
             serializer.save()
+            return Response({"detail": "Project successfully update"},
+                            status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({"detail": "You do not have permission to update this project !"},
                             status=status.HTTP_403_FORBIDDEN)
@@ -168,7 +171,7 @@ class CreateIssueView(CreateAPIView):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    
+
 class IssueView(RetrieveUpdateDestroyAPIView):
     serializer_class = IssueSerializer
     queryset = Issue.objects.all()
@@ -233,28 +236,31 @@ class CreateCommentView(CreateAPIView):
 class CommentView(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsCreator]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         comment = self.get_object()
-        if comment.creator.contributor.user == request.user:
+        if comment.creator.contributor == request.user:
             serializer = self.get_serializer(comment)
             return Response(serializer.data)
         else:
-            return Response({"detail": "Vous n'avez pas la permission de consulter ce commentaire."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Vous n'avez pas la permission de consulter ce commentaire."},
+                            status=status.HTTP_403_FORBIDDEN)
 
     def perform_update(self, serializer):
         comment = self.get_object()
-        if comment.creator.contributor.user == self.request.user:
+        if comment.creator.contributor == self.request.user:
             serializer.save()
             return Response({"detail": "Le commentaire a été mis à jour."}, status=status.HTTP_200_OK)
         else:
-            return Response({"detail": "Vous n'avez pas la permission de mettre à jour ce commentaire."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Vous n'avez pas la permission de mettre à jour ce commentaire."},
+                            status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request, *args, **kwargs):
         comment = self.get_object()
-        if comment.creator.contributor.user == request.user:
+        if comment.creator.contributor == request.user:
             comment.delete()
             return Response({"detail": "Le commentaire a été supprimé."}, status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response({"detail": "Vous n'avez pas la permission de supprimer ce commentaire."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Vous n'avez pas la permission de supprimer ce commentaire."},
+                            status=status.HTTP_403_FORBIDDEN)

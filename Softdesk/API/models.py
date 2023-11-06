@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 
@@ -74,6 +75,7 @@ class Issue(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     description = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
     assigne_a = models.ForeignKey(Contributor, on_delete=models.CASCADE,
                                   related_name='issues_assignees', null=True, blank=True)
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='To Do')
@@ -88,7 +90,13 @@ class Comment(models.Model):
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
     creator = models.ForeignKey(Contributor, on_delete=models.CASCADE)
     texte = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
     link_issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='linked_issue')
 
     def __str__(self):
         return self.id
+    
+    def save(self, *args, **kwargs):
+        if not self.date_created:
+            self.date_created = timezone.now()
+        super(Comment, self).save(*args, **kwargs)

@@ -95,7 +95,7 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.id
-    
+
     def save(self, *args, **kwargs):
         if not self.date_created:
             self.date_created = timezone.now()

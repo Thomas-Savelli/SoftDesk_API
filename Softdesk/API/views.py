@@ -2,6 +2,7 @@ from rest_framework.generics import (CreateAPIView,
                                      RetrieveUpdateDestroyAPIView)
 
 from django.contrib.auth.hashers import make_password
+
 from datetime import date
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework import status, generics
@@ -16,10 +17,12 @@ from .serializers import (UserSerializer,
                           ProjectDetailSerializer,
                           UserRegistrationSerializer,
                           ProjectSerializer,
+                          IssueListSerializer,
                           IssueSerializer,
                           CommentSerializer)
 
-from .permissions import IsContributor, IsCreator
+from .permissions import IsContributor
+from .paginations import CustomPagination
 
 
 @api_view(['POST'])
@@ -97,6 +100,7 @@ class CustomListProjectsViewMixin:
 class ListProjectsView(CustomListProjectsViewMixin, ReadOnlyModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectListSerializer
+    pagination_class = CustomPagination
 
 
 @api_view(['POST'])
@@ -123,6 +127,7 @@ class ProjectView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectDetailSerializer
     lookup_field = 'id'
     permission_classes = [IsAuthenticated, IsContributor]
+    pagination_class = CustomPagination
 
     def destroy(self, request, *args, **kwargs):
         project = self.get_object()
@@ -146,7 +151,21 @@ class ProjectView(RetrieveUpdateDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        issues = instance.issues.all()
+
+        # Use pagination to paginate issues and add them to 'project_details'
+        page = self.paginate_queryset(issues)
+        if page is not None:
+            issue_serializer = IssueListSerializer(page, many=True)
+            return self.get_paginated_response({
+                'project_details': serializer.data,
+                'project_issues': issue_serializer.data,
+            })
+
+        return Response({
+            'project_details': serializer.data,
+            'project_issues': [],
+        })
 
 
 class CreateIssueView(CreateAPIView):
@@ -176,6 +195,7 @@ class IssueView(RetrieveUpdateDestroyAPIView):
     serializer_class = IssueSerializer
     queryset = Issue.objects.all()
     permission_classes = [IsAuthenticated, IsContributor]
+    pagination_class = CustomPagination
 
     def get_object(self):
         # to config and select id of issue
@@ -189,24 +209,24 @@ class IssueView(RetrieveUpdateDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        issue = self.get_object()
-        if issue.creator == request.user:
-            issue.delete()
-            return Response({"detail": "Issue successfully deleted"},
-                            status=status.HTTP_204_NO_CONTENT)
-        return Response({"detail": "You do not have permission to delete this issue !"},
-                        status=status.HTTP_403_FORBIDDEN)
+        # Obtenez les commentaires associés à l'issue
+        comments = Comment.objects.filter(issue=instance)
 
-    def perform_update(self, serializer):
-        issue = self.get_object()
-        if issue.creator == self.request.user:
-            serializer.save()
-        else:
-            return Response({"detail": "You do not have permission to update this issue !"},
-                            status=status.HTTP_403_FORBIDDEN)
+        # Utilisez la pagination pour paginer les commentaires
+        page = self.paginate_queryset(comments)
+        if page is not None:
+            comment_serializer = CommentSerializer(page, many=True)
+            # Renvoyez les détails de l'issue et la liste paginée des commentaires
+            return self.get_paginated_response({
+                'issue_details': serializer.data,
+                'issue_comments': comment_serializer.data,
+            })
+
+        return Response({
+            'issue_details': serializer.data,
+            'issue_comments': [],
+        })
 
 
 class CreateCommentView(CreateAPIView):

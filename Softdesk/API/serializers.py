@@ -58,47 +58,54 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'creator','date_created', 'texte']
+        fields = ['id', 'creator', 'date_created', 'texte']
+
+
+class IssueListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Issue
+        fields = ['id', 'name', 'description',
+                  'creator', 'date_created', 'assigne_a', 'statut',
+                  'priority', 'balise']
 
 
 class IssueSerializer(serializers.ModelSerializer):
     creator = serializers.StringRelatedField(source='creator.username', read_only=True)
-    comments = serializers.SerializerMethodField()
+    # comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Issue
         fields = ['id', 'name', 'description',
-                  'creator','date_created', 'assigne_a', 'statut',
-                  'priority', 'balise', 'comments']
+                  'creator', 'date_created', 'assigne_a', 'statut',
+                  'priority', 'balise']
 
     def get_creator(self, instance):
         return instance.creator.username
 
-    def get_comments(self, instance):
-        comments = Comment.objects.filter(issue=instance)
-        serialized_comments = []
+    # def get_comments(self, instance):
+    #     comments = Comment.objects.filter(issue=instance)
+    #     serialized_comments = []
 
-        for comment in comments:
-            serialized_comment = {
-                'id': comment.id,
-                'creator': comment.creator.contributor.username,
-                'date_created': comment.date_created,
-                'texte': comment.texte,
-            }
-            serialized_comments.append(serialized_comment)
-        return serialized_comments
+    #     for comment in comments:
+    #         serialized_comment = {
+    #             'id': comment.id,
+    #             'creator': comment.creator.contributor.username,
+    #             'date_created': comment.date_created,
+    #             'texte': comment.texte,
+    #         }
+    #         serialized_comments.append(serialized_comment)
+    #     return serialized_comments
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
     creator = serializers.SerializerMethodField()
     contributors = serializers.SerializerMethodField()
-    issues = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = ['id', 'name', 'type', 'creator',
                   'date_created', 'description',
-                  'contributors', 'issues']
+                  'contributors']
 
     def get_creator(self, instance):
         return instance.creator.username
@@ -106,24 +113,6 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     def get_contributors(self, instance):
         contributors = Contributor.objects.filter(project=instance)
         return [contributor.contributor.username for contributor in contributors]
-
-    def get_issues(self, instance):
-        issues = Issue.objects.filter(project=instance)
-        serialized_issues = []
-
-        for issue in issues:
-            serialized_issue = {
-                'id': issue.id,
-                'name': issue.name,
-                'priority': issue.priority,
-                'description': issue.description,
-                'creator': issue.creator.username,
-                'baslise': issue.balise,
-                'status': issue.statut,
-                'assigne-to': issue.assigne_a
-            }
-            serialized_issues.append(serialized_issue)
-        return serialized_issues
 
 
 class ProjectSerializer(serializers.ModelSerializer):

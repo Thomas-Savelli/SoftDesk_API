@@ -62,16 +62,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class IssueListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Issue
-        fields = ['id', 'name', 'description',
-                  'creator', 'date_created', 'assigne_a', 'statut',
-                  'priority', 'balise']
-
-
-class IssueSerializer(serializers.ModelSerializer):
     creator = serializers.StringRelatedField(source='creator.username', read_only=True)
-    # comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Issue
@@ -82,19 +73,19 @@ class IssueSerializer(serializers.ModelSerializer):
     def get_creator(self, instance):
         return instance.creator.username
 
-    # def get_comments(self, instance):
-    #     comments = Comment.objects.filter(issue=instance)
-    #     serialized_comments = []
 
-    #     for comment in comments:
-    #         serialized_comment = {
-    #             'id': comment.id,
-    #             'creator': comment.creator.contributor.username,
-    #             'date_created': comment.date_created,
-    #             'texte': comment.texte,
-    #         }
-    #         serialized_comments.append(serialized_comment)
-    #     return serialized_comments
+class IssueSerializer(serializers.ModelSerializer):
+    creator = serializers.StringRelatedField(source='creator.username', read_only=True)
+    assigne_a = serializers.CharField(allow_blank=True, required=False)
+
+    class Meta:
+        model = Issue
+        fields = ['id', 'name', 'description',
+                  'creator', 'date_created', 'assigne_a', 'statut',
+                  'priority', 'balise']
+
+    def get_creator(self, instance):
+        return instance.creator.username
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):

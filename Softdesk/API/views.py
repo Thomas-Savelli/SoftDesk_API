@@ -2,6 +2,7 @@ from rest_framework.generics import (CreateAPIView,
                                      RetrieveUpdateDestroyAPIView)
 
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 
 from datetime import date
 from rest_framework.decorators import api_view, permission_classes, action
@@ -138,12 +139,14 @@ class ProjectView(RetrieveUpdateDestroyAPIView):
         return Response({"detail": "You do not have permission to delete this project !"},
                         status=status.HTTP_403_FORBIDDEN)
 
-    def perform_update(self, serializer):
+    def update(self, request, *args, **kwargs):
         project = self.get_object()
-        if project.creator == self.request.user:
-            serializer.save()
-            return Response({"detail": "Project successfully update"},
-                            status=status.HTTP_204_NO_CONTENT)
+        if project.creator == request.user:
+            serializer = self.get_serializer(project, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"detail": "Project successfully updated"}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"detail": "You do not have permission to update this project !"},
                             status=status.HTTP_403_FORBIDDEN)
@@ -186,6 +189,26 @@ class CreateIssueView(CreateAPIView):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # Extract the assigne_a username from the request data
+        assigne_a_username = serializer.validated_data.get('assigne_a')
+        if assigne_a_username:
+            # Find the User by username
+            user = User.objects.filter(username=assigne_a_username).first()
+
+            if not user:
+                return Response({"message": "The specified user does not exist"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            # Ensure that the user is a contributor of the project
+            contributor = Contributor.objects.filter(project=project, contributor=user).first()
+            if not contributor:
+                return Response({"message": "The specified user is not a contributor to this project"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            # Set the assigne_a field to the Contributor instance
+            serializer.validated_data['assigne_a'] = contributor
+
         serializer.save(creator=request.user, project=project)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -210,14 +233,14 @@ class IssueView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
 
-        # Obtenez les commentaires associés à l'issue
+        # get Comment to Issue
         comments = Comment.objects.filter(issue=instance)
 
-        # Utilisez la pagination pour paginer les commentaires
+        # Use pagination to paginate Comment
         page = self.paginate_queryset(comments)
         if page is not None:
             comment_serializer = CommentSerializer(page, many=True)
-            # Renvoyez les détails de l'issue et la liste paginée des commentaires
+            # Return issue details and paginated list of comments
             return self.get_paginated_response({
                 'issue_details': serializer.data,
                 'issue_comments': comment_serializer.data,
@@ -227,6 +250,55 @@ class IssueView(RetrieveUpdateDestroyAPIView):
             'issue_details': serializer.data,
             'issue_comments': [],
         })
+
+    def update(self, request, *args, **kwargs):
+        issue = self.get_object()
+        project = issue.project  # get id du projet de l'Issue
+
+        if issue.creator == request.user:
+            serializer = self.get_serializer(issue, data=request.data, partial=True)
+            if serializer.is_valid():
+                assigne_a_username = request.data.get('assigne_a')
+
+                if assigne_a_username is not None:
+                    # Contrôlez d'abord si l'utilisateur est un contributeur du projet
+                    if not Contributor.objects.filter(project=project, contributor=request.user).exists():
+                        return Response({"message": "You are not a contributor to this project"},
+                                        status=status.HTTP_403_FORBIDDEN)
+
+                    if assigne_a_username:
+                        # Trouvez le User correspondant au username
+                        user = User.objects.filter(username=assigne_a_username).first()
+
+                        if not user:
+                            return Response({"message": "The specified user does not exist"},
+                                            status=status.HTTP_400_BAD_REQUEST)
+
+                        # Assurez-vous que l'utilisateur est un contributeur du projet
+                        contributor = Contributor.objects.filter(project=project, contributor=user).first()
+                        if not contributor:
+                            return Response({"message": "The specified user is not a contributor to this project"},
+                                            status=status.HTTP_400_BAD_REQUEST)
+
+                        # Attribuez le contributeur à l'assigne_a de l'issue
+                        serializer.validated_data['assigne_a'] = contributor
+                    else:
+                        # L'utilisateur a passé 'assigne_a' comme `null`, donc désattribuez l'issue
+                        serializer.validated_data['assigne_a'] = None
+
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "You do not have permission to update this issue!"},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    def destroy(self, request, *args, **kwargs):
+        issue = self.get_object()
+        if issue.creator == request.user:
+            issue.delete()
+            return Response({"detail": "Issue successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "You do not have permission to delete this issue !"},
+                        status=status.HTTP_403_FORBIDDEN)
 
 
 class CreateCommentView(CreateAPIView):
@@ -264,23 +336,23 @@ class CommentView(RetrieveUpdateDestroyAPIView):
             serializer = self.get_serializer(comment)
             return Response(serializer.data)
         else:
-            return Response({"detail": "Vous n'avez pas la permission de consulter ce commentaire."},
+            return Response({"detail": "You do not have permission to get this comment !"},
                             status=status.HTTP_403_FORBIDDEN)
 
     def perform_update(self, serializer):
         comment = self.get_object()
         if comment.creator.contributor == self.request.user:
             serializer.save()
-            return Response({"detail": "Le commentaire a été mis à jour."}, status=status.HTTP_200_OK)
+            return Response({"detail": "Comment successfully updated"}, status=status.HTTP_200_OK)
         else:
-            return Response({"detail": "Vous n'avez pas la permission de mettre à jour ce commentaire."},
+            return Response({"detail": "You do not have permission to update this comment !"},
                             status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request, *args, **kwargs):
         comment = self.get_object()
         if comment.creator.contributor == request.user:
             comment.delete()
-            return Response({"detail": "Le commentaire a été supprimé."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"detail": "Comment successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response({"detail": "Vous n'avez pas la permission de supprimer ce commentaire."},
+            return Response({"detail": "You do not have permission to delete this comment !"},
                             status=status.HTTP_403_FORBIDDEN)

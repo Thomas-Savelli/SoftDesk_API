@@ -2,7 +2,6 @@ from rest_framework.generics import (CreateAPIView,
                                      RetrieveUpdateDestroyAPIView)
 
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import get_object_or_404
 
 from datetime import date
 from rest_framework.decorators import api_view, permission_classes, action
